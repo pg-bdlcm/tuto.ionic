@@ -1,4 +1,6 @@
 import * as firebase from "firebase";
+import { toast } from "./toats";
+import { resolve } from "dns";
 
 const config = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -13,18 +15,46 @@ const config = {
 
 firebase.initializeApp(config);
 
-export async function loginUser(username: string, password: string) {
+export async function getCurrentUser() {
+  return new Promise((resolve, reject) => {
+    const unscribe = firebase.auth().onAuthStateChanged(function(user) {
+      if (user) resolve(user);
+      else resolve(null);
+      unscribe();
+    });
+  });
+}
+
+export async function logoutUser() {
+  return firebase.auth().signOut();
+}
+
+export async function loginUser(username: string, password: string): Promise<any> {
   const email = `${username}@codedamn.com`;
   // authenticate with firebase
   try {
     const res = await firebase.auth().signInWithEmailAndPassword(email, password);
 
     // if present, show dashboard
-    console.log(res);
+    return res;
+  } catch (error) {
+    // if not, show error
+    toast(error.message);
+    return false;
+  }
+}
+
+export async function registerUser(username: string, password: string) {
+  const email = `${username}@codedamn.com`;
+  // authenticate with firebase
+  try {
+    const res = await firebase.auth().createUserWithEmailAndPassword(email, password);
+
+    // if present, show dashboard
     return true;
   } catch (error) {
     // if not, show error
-    console.log(error);
+    toast(error.message);
     return false;
   }
 }
